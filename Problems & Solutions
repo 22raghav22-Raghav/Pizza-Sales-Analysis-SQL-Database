@@ -1,0 +1,233 @@
+🟢 Part 1: Core Fundamentals & Aggregations
+
+Q1. What is the total revenue generated from all pizza sales?
+
+ANS
+
+SELECT ROUND(SUM(od.quantity * p.price), 2) AS total_revenue
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id;
+
+
+Q2. How many unique orders were placed in total?
+
+ANS
+
+SELECT COUNT(DISTINCT order_id) AS total_orders
+FROM orders;
+Q3. What is the total quantity of individual pizzas sold?
+SQL
+SELECT SUM(quantity) AS total_pizzas_sold
+FROM order_details;
+
+
+Q4. What are the highest and lowest prices of pizzas on the menu?
+
+ANS
+
+SELECT 
+    MAX(price) AS highest_price,
+    MIN(price) AS lowest_price
+FROM pizzas;
+
+
+Q5. Which pizza size is the most commonly ordered?
+
+ANS
+
+SELECT p.size, SUM(od.quantity) AS total_quantity
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+GROUP BY p.size
+ORDER BY total_quantity DESC
+LIMIT 1;
+
+
+Q6. How many pizzas exist in each pizza category?
+
+ANS
+
+SELECT category, COUNT(pizza_type_id) AS pizza_count
+FROM pizza_types
+GROUP BY category
+ORDER BY pizza_count DESC;
+
+
+🟡 Part 2: Grouped Metrics & Time Analysis
+
+Q7. What are the top 5 most ordered pizza types by volume?
+
+ANS
+
+SELECT pt.name, SUM(od.quantity) AS total_ordered
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+GROUP BY pt.name
+ORDER BY total_ordered DESC
+LIMIT 5;
+
+
+Q8. What are the top 5 highest revenue-generating pizza types?
+
+ANS
+
+SELECT pt.name, ROUND(SUM(od.quantity * p.price), 2) AS total_revenue
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+GROUP BY pt.name
+ORDER BY total_revenue DESC
+LIMIT 5;
+
+
+Q9. What is the total number of orders placed during each hour of the day?
+
+ANS
+
+SELECT EXTRACT(HOUR FROM order_time) AS order_hour, COUNT(order_id) AS order_count
+FROM orders
+GROUP BY EXTRACT(HOUR FROM order_time)
+ORDER BY order_hour;
+
+
+Q10. What is the daily order distribution across days of the week?
+
+ANS
+
+SELECT TO_CHAR(order_date, 'Day') AS day_of_week, COUNT(order_id) AS total_orders
+FROM orders
+GROUP BY TO_CHAR(order_date, 'Day')
+ORDER BY total_orders DESC;
+
+
+🔴 Part 3: Window Functions & Analytical Calculations
+
+
+Q11. Compare each pizza's price against the overall average price of all pizzas.
+
+ANS
+
+SELECT 
+    pizza_id, 
+    price,
+    ROUND(AVG(price) OVER(), 2) AS overall_avg_price,
+    ROUND(price - AVG(price) OVER(), 2) AS price_difference
+FROM pizzas;
+
+
+Q12. Compare each pizza's price to the average price within its specific category.
+
+ANS
+
+SELECT 
+    pt.category,
+    pt.name,
+    p.price,
+    ROUND(AVG(p.price) OVER(PARTITION BY pt.category), 2) AS category_avg_price
+FROM pizzas p
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id;
+
+
+Q13. Rank all pizza types by total quantity sold.
+
+ANS
+
+SELECT 
+    pt.name,
+    SUM(od.quantity) AS total_quantity,
+    RANK() OVER(ORDER BY SUM(od.quantity) DESC) AS sales_rank
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+GROUP BY pt.name;
+
+
+Q14. Rank pizzas by price within each size category.
+
+ANS
+
+SELECT 
+    pizza_id,
+    size,
+    price,
+    DENSE_RANK() OVER(PARTITION BY size ORDER BY price DESC) AS price_rank_in_size
+FROM pizzas;
+
+
+Q15. Calculate the percentage contribution of each category to total revenue in a single query.
+
+ANS
+
+SELECT 
+    pt.category,
+    ROUND(SUM(od.quantity * p.price), 2) AS category_revenue,
+    ROUND(
+      SUM(od.quantity * p.price) * 100.0 / 
+      SUM(SUM(od.quantity * p.price)) OVER(), 2
+    ) AS pct_contribution
+FROM order_details od
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+JOIN pizza_types pt ON p.pizza_type_id = pt.pizza_type_id
+GROUP BY pt.category;
+
+
+Q16. Calculate cumulative total revenue over time by date using window functions.
+
+ANS
+
+SELECT 
+    o.order_date,
+    ROUND(SUM(od.quantity * p.price), 2) AS daily_revenue,
+    ROUND(SUM(SUM(od.quantity * p.price)) OVER(ORDER BY o.order_date), 2) AS running_total
+FROM orders o
+JOIN order_details od ON o.order_id = od.order_id
+JOIN pizzas p ON od.pizza_id = p.pizza_id
+GROUP BY o.order_date;
+
+
+Q17. Compare today's total orders with yesterday's order volume using LAG().
+
+ANS
+
+SELECT 
+    order_date,
+    COUNT(order_id) AS today_orders,
+    LAG(COUNT(order_id), 1) OVER(ORDER BY order_date) AS previous_day_orders
+FROM orders
+GROUP BY order_date;
+
+
+Q18. Get the next order's timestamp to track time elapsed between customer orders using LEAD().
+
+ANS
+
+SELECT 
+    order_id,
+    order_date,
+    order_time,
+    LEAD(order_time, 1) OVER(PARTITION BY order_date ORDER BY order_time) AS next_order_time
+FROM orders;
+
+
+Q19. Assign a sequential item number to each item inside an order using ROW_NUMBER().
+
+ANS
+
+SELECT 
+    order_id,
+    pizza_id,
+    quantity,
+    ROW_NUMBER() OVER(PARTITION BY order_id ORDER BY order_details_id) AS item_sequence
+FROM order_details;
+
+
+Q20. Divide pizzas into 4 price quartiles (from lowest to highest price) using NTILE().
+
+ANS
+
+SELECT 
+    pizza_id,
+    price,
+    NTILE(4) OVER(ORDER BY price ASC) AS price_quartile
+FROM pizzas;
