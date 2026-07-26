@@ -23,6 +23,7 @@ The goal is to translate raw order logs into actionable business insights regard
 
 
 🛠️ Data Architecture & Schema
+
 The relational database consists of 4 main tables structured to eliminate redundancies:
 - `orders`: Transaction timestamps.
 - `order_details`: Line items per order.
