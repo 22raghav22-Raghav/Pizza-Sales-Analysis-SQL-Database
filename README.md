@@ -30,6 +30,11 @@ The relational database consists of 4 main tables structured to eliminate redund
 - `pizzas`: Size and pricing tiers.
 - `pizza_types`: Category and ingredient metadata.
 
+## 📐 Database Schema & ERD
+The schema is normalized across 4 relational tables:
+
+![Pizza Sales ERD Diagram](outputs/erd_diagram.png)
+
 ![ERD Diagram](outputs/ERD_diagram.png)
 
 
