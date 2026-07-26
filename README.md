@@ -8,6 +8,7 @@ SQL project where I built a relational database and analyzed real-world e-commer
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
  📌 Project Overview
+ 
 This project involves building a relational database schema from scratch and running end-to-end exploratory SQL data analysis on an e-commerce pizza store dataset containing **~48,000 sales transactions**. 
 
 The goal is to translate raw order logs into actionable business insights regarding **revenue drivers, peak order periods, menu performance, and inventory trends**.
